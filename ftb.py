@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 import logging
 import importlib.util as pathImport
@@ -14,8 +13,8 @@ logging.basicConfig(
 commandConfig: dict = json.load(open("./command.json", encoding="utf-8"))
 args = sys.argv[1:]
 commands = {
-    ".".join(path.split(".")[:-1]): f"./command/{path}"
-    for path in os.listdir("./command/")
+    key: f"./command/{"/".join(key.split("."))}.py"
+    for key in commandConfig
 }
 
 
@@ -23,9 +22,9 @@ def runFunc(func, config: str, argsStart: int):
     if config == "-":
         func()
     else:
-        config = config[2:].split(" ")
+        configSplit = config[2:].split(" ")
         data = {}
-        for index, arg in enumerate(config):
+        for index, arg in enumerate(configSplit):
             try:
                 if arg[0] == "<" and arg[-1] == ">":
                     data[arg[1:-1]] = args[index + 1 + argsStart]
@@ -42,7 +41,8 @@ def runFunc(func, config: str, argsStart: int):
                             else ""
                         )
             except IndexError as error:
-                print(f"索引选取错误: {error}")
+                print(f"索引选取错误: {error}\n{config}")
+                return
         func(**data)
 
 
