@@ -1,0 +1,6 @@
+{
+    "language": "en-us",
+    "commandConfig": "command.json",
+    "commandDir": "command",
+    "debug": false
+}
