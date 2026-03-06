@@ -17,8 +17,8 @@ def config(path: str, lang: str, debug: str, tools: dict):
 def enter(path: str, newName: str):
     os.rename(path, newName)
     logging.info(
-        f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)} => {os.path.basename(newName)}"
+        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.basename(newName)}"
     )
     print(
-        f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)} => {os.path.basename(newName)}"
+        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.basename(newName)}"
     )

@@ -16,5 +16,5 @@ def config(path: str, lang: str, debug: str, tools: dict):
 
 def enter(path: str):
     os.remove(path)
-    logging.info(f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)}")
-    print(f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)}")
+    logging.info(f"{tran.run("scuccess")} {os.path.abspath(path)}")
+    print(f"{tran.run("scuccess")} {os.path.abspath(path)}")

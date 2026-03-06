@@ -93,6 +93,6 @@ def enter(mode: str, data: str, configs: str):
         tree = json.loads(data.replace("'", '"'))
         draw(tree)
     elif mode == "help":
-        print(tran.run("<?>", "help"))
+        print(tran.run("help"))
     else:
-        print(tran.run(f"<?> {mode}", "notFoundMode"))
+        print(tran.run("notFoundMode", f"<?> {mode}"))

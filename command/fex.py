@@ -3,9 +3,76 @@ import os
 import logging
 import importlib.util as pathImport
 
+TRAN = {
+    "zh-cn": {
+        "encodingError": "请检查打开编码是否正确: ",
+        "successExit": "成功退出",
+        "fileCharCount": "f'此文件共有 {len('\\n'.join(fileContent))} 个字符'",
+        "lineCharCount": "f'第 {int(command[1])} 行有 {len(fileContent[int(command[1]) - 1])} 个字符'",
+        "using": "用法: ",
+        "error": "错误: ",
+        "saveto": "文件已保存至 ",
+        "successExec": "执行成功",
+        "notFoundCommand": "未找到该命令",
+        "save": "已保存文件至 ",
+        "help": "移动光标:方向键|进入命令模式:ESC|命令模式(退出q|保存s|写入模式w|帮助h|更多帮助H)|写入模式(按下键盘按键即可写入)",
+        "Help": """FEX 使用帮助
+按下任意键即可退出此帮助
+全局: 这是一些全局可以使用的按键
+    [↑]            将光标跳转至上一行
+    [↓]            将光标跳转至下一行
+    [←]            将光标跳转至前一列
+    [→]            将光标跳转至后一列
+    [Esc]          进入命令模式
+命令模式: 你可以使用一些命令来完成对应操作
+    [q]uit         退出
+    [w]rite        进入写入模式
+    [s]ave         保存文件
+    [h]elp         状态栏帮助
+    [H]elp         更多帮助
+写入模式: 你可以在文件中进行编辑
+    [*]            在文件对应位置写入文本""",
+    },
+    "en-us": {
+        "encodingError": "Please check if the opened encoding is correct: ",
+        "successExit": "Exited successfully",
+        "fileCharCount": "f'This file has {len('n'.join(fileContent))} characters'",
+        "lineCharCount": "f'Line {int(command[1])} has {len(fileContent[int(command[1]) - 1])} characters'",
+        "using": "Usage: ",
+        "error": "Error: ",
+        "saveto": "File has been saved to ",
+        "successExec": "Executed successfully",
+        "notFoundCommand": "Command not found",
+        "save": "File saved to ",
+        "help": "Move cursor: arrow keys | Enter command mode: ESC | Command mode (exit q | save s | write mode w | help h | more help H) | Write mode (press any key to write)",
+        "Help": """FEX Help
+Press any key to exit this help
+Global: These are some keys that can be used globally
+    [↑]            Move the cursor to the previous line
+    [↓]            Move the cursor to the next line
+    [←]            Move the cursor to the previous column
+    [→]            Move the cursor to the next column
+    [Esc]          Enter command mode
+Command mode: You can use some commands to perform corresponding operations
+    [q]uit         Exit
+    [w]rite        Enter write mode
+    [s]ave         Save file
+    [h]elp         Status bar help
+    [H]elp         More help
+Write mode: You can edit the file
+    [*]            Write text at the corresponding position in the file""",
+    },
+}
+tran = None
+
+
+def config(path: str, lang: str, debug: str, tools: dict):
+    global tran
+    tran = tools["tran"](TRAN, lang)
+
 
 def enter(path: str, encoding: str, plugin: str):
-    def main(stdscr: curses.window):
+    def main(window: curses.window):
         run = True
         mode = "COMMAND"
         curY, curX = 0, 0
@@ -20,7 +87,7 @@ def enter(path: str, encoding: str, plugin: str):
             if not fileContent:
                 fileContent = [""]
         except UnicodeDecodeError:
-            print(f"请检查打开格式是否正确: {encoding}")
+            print(f"{tran.run("encodingError")}{encoding}")
             return
 
         def runCommand(text: str):
@@ -28,57 +95,57 @@ def enter(path: str, encoding: str, plugin: str):
             command = text.split(" ")
             if command == ["quit"]:
                 run = False
-                return "成功退出"
+                return tran.run("successExit")
             elif command[0] == "length":
                 try:
                     if len(command) == 1:
-                        return f"此文件共有 {len("\n".join(fileContent))} 个字符"
+                        return eval(tran.run("fileCharCount"))
                     elif len(command) == 2:
-                        return f"第 {int(command[1])} 行有 {len(fileContent[int(command[1]) - 1])} 个字符"
+                        return eval(tran.run("lineCharCount"))
                     else:
-                        return "用法: length [lineNumber]"
+                        return f"{tran.run("using")}length [lineNumber]"
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             elif command[0] == "info":
                 try:
                     label = " ".join(command[1:])
                     logging.info(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             elif command[0] == "warn":
                 try:
                     label = " ".join(command[1:])
                     logging.warning(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             elif command[0] == "error":
                 try:
                     label = " ".join(command[1:])
                     logging.error(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             elif command[0] == "saveto":
                 try:
                     open(command[1], "a", encoding=command[2]).write(
                         "\n".join(fileContent)
                     )
-                    return f"文件已保存至 {os.path.abspath(command[1])}"
+                    return f"{tran.run("saveto")}{os.path.abspath(command[1])}"
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             elif command[0] == "exec":
                 try:
                     exec(" ".join(command[1:]))
-                    return "执行成功!"
+                    return tran.run("successExec")
                 except Exception as error:
-                    return f"错误: {error}"
+                    return f"{tran.run("error")}{error}"
             for func in commands:
                 text = func(command)
                 if text:
                     return text
-            return "未找到该命令"
+            return tran.run("notFoundCommand")
 
         curses.start_color()
         curses.use_default_colors()
@@ -94,8 +161,8 @@ def enter(path: str, encoding: str, plugin: str):
             module.ready({"commands": commands})
         while run:
             # 主要渲染
-            height, width = stdscr.getmaxyx()
-            stdscr.clear()
+            height, width = window.getmaxyx()
+            window.clear()
             if plugin != "":
                 module.update(
                     {
@@ -107,7 +174,7 @@ def enter(path: str, encoding: str, plugin: str):
                     }
                 )
 
-            stdscr.addstr(
+            window.addstr(
                 f" {os.path.abspath(path)} - {encoding} ".center(width, "="),
                 curses.color_pair(3),
             )
@@ -115,7 +182,7 @@ def enter(path: str, encoding: str, plugin: str):
                 fileContent[viewOffset : viewOffset + height - 2]
             ):
                 lineNumber = f"{row + 1 + viewOffset:>{len(str(len(fileContent)))}} "
-                stdscr.addstr(row + 1, 0, lineNumber, curses.color_pair(1))
+                window.addstr(row + 1, 0, lineNumber, curses.color_pair(1))
                 if width - len(lineNumber) > 0:
                     for column, char in enumerate(text[: width - len(lineNumber)]):
                         action = False
@@ -124,26 +191,29 @@ def enter(path: str, encoding: str, plugin: str):
                                 value[0][0][0] <= row <= value[0][1][0]
                                 and value[0][0][1] <= column <= value[0][1][1]
                             ):
-                                stdscr.addch(
+                                window.addch(
                                     row + 1, len(lineNumber) + column, char, value[1]
                                 )
                                 action = True
                         if not action:
-                            stdscr.addch(row + 1, len(lineNumber) + column, char)
+                            window.addch(row + 1, len(lineNumber) + column, char)
 
             if not pause:
                 stateText = f"{mode}: {curY+1} - {curX}"
             pause = False
-            stdscr.addstr(
-                height - 1, 0, stateText.ljust(width - 1, " "), curses.color_pair(2)
+            window.addstr(
+                height - 1,
+                0,
+                stateText[: width - 1].ljust(width - 1, " "),
+                curses.color_pair(2),
             )
 
-            stdscr.move(
+            window.move(
                 curY + 1 - viewOffset,
                 curX + len(f"{curY + 1:>{len(str(len(fileContent)))}} "),
             )
-            stdscr.refresh()
-            key = stdscr.getch()
+            window.refresh()
+            key = window.getch()
             # 控制键
             if key == 27:
                 mode = "COMMAND"
@@ -179,46 +249,28 @@ def enter(path: str, encoding: str, plugin: str):
                     run = False
                 elif key == ord("s"):
                     open(path, "w", encoding=encoding).write("\n".join(fileContent))
-                    stateText = f"已保存文件至 {path}"
+                    stateText = f"{tran.run("save")}{path}"
                     pause = True
                 elif key == ord("h"):
-                    stateText = "移动光标:方向键|进入命令模式:ESC|命令模式(退出q|保存s|写入模式w|帮助h|更多帮助H)|写入模式(按下键盘按键即可写入)"
+                    stateText = tran.run("help")
                     pause = True
                 elif key == ord("H"):
-                    stdscr.clear()
-                    text = [
-                        "FEX 使用帮助",
-                        "按下任意键即可退出此帮助",
-                        "全局: 这是一些全局可以使用的按键",
-                        "  [↑]            将光标跳转至上一行",
-                        "  [↓]            将光标跳转至下一行",
-                        "  [←]            将光标跳转至前一列",
-                        "  [→]            将光标跳转至后一列",
-                        "  [Esc]          进入命令模式",
-                        "命令模式: 你可以使用一些命令来完成对应操作",
-                        "  [Q]uit         退出",
-                        "  [W]rite        进入写入模式",
-                        "  [S]ave         保存文件",
-                        "  [H]elp         状态栏帮助",
-                        "  [^H]elp more   更多帮助",
-                        "写入模式: 你可以在文件中进行编辑",
-                        "  [*]            在文件对应位置写入文本",
-                    ]
-                    for row, label in enumerate(text):
-                        stdscr.addstr(row, 0, label)
-                    stdscr.getch()
+                    window.clear()
+                    for row, label in enumerate(tran.run("Help").split("\n")):
+                        window.addstr(row, 0, label)
+                    window.getch()
                 elif key == ord("/"):
                     stateText = ""
                     stateCurIndex = 0
                     while True:
-                        stdscr.addstr(
+                        window.addstr(
                             height - 1,
                             0,
                             stateText.ljust(width - 1, " "),
                             curses.color_pair(4),
                         )
-                        stdscr.move(height - 1, stateCurIndex)
-                        key = stdscr.getch()
+                        window.move(height - 1, stateCurIndex)
+                        key = window.getch()
                         if key == 27:
                             pause = False
                             break

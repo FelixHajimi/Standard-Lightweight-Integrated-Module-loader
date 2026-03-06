@@ -49,11 +49,11 @@ def enter(path: str):
         print(
             f"""
 {p.resolve()}
-{tran.run("<?>", "isFile")}{p.is_file()}
-{tran.run("<?>", "size")}{calcSize(p.stat().st_size, 0) if p.is_file() else "<DIR>"}
-{tran.run("<?>", "lastModify")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_mtime))}
-{tran.run("<?>", "lastVisit")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_atime))}
-{tran.run("<?>", "createOrChange")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_ctime))}
-{tran.run("<?>", "mode")}{stat.filemode(p.stat().st_mode)}
+{tran.run("isFile")}{p.is_file()}
+{tran.run("size")}{calcSize(p.stat().st_size, 0) if p.is_file() else "<DIR>"}
+{tran.run("lastModify")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_mtime))}
+{tran.run("lastVisit")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_atime))}
+{tran.run("createOrChange")}{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(p.stat().st_ctime))}
+{tran.run("mode")}{stat.filemode(p.stat().st_mode)}
 """
         )

@@ -18,8 +18,8 @@ def config(path: str, lang: str, debug: str, tools: dict):
 def enter(path: str, newPath: str):
     shutil.move(path, newPath)
     logging.info(
-        f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
+        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
     )
     print(
-        f"{tran.run("<?>", "scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
+        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
     )

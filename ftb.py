@@ -13,27 +13,29 @@ logging.basicConfig(
 
 PATH = os.path.dirname(__file__)
 SETTING = json.load(open(f"{PATH}/setting.json", encoding="utf-8"))
-commandConfig: dict = json.load(open(f"{PATH}/{SETTING["commandConfig"]}", encoding="utf-8"))
+commandConfig: dict = json.load(
+    open(f"{PATH}/{SETTING["commandConfig"]}", encoding="utf-8")
+)
 args = sys.argv[1:]
 commands = {
     key: f"{PATH}/{SETTING["commandDir"]}/{"/".join(key.split("."))}.py"
     for key in commandConfig
 }
 TRANMAP = {
-    "zh-cn": {
-        "indexError": "索引选取错误: ",
-        "notFoundCommand": "未找到该命令"
-    },
+    "zh-cn": {"indexError": "索引选取错误: ", "notFoundCommand": "未找到该命令"},
     "en-us": {
         "indexError": "Index selection error: ",
-        "notFoundCommand": "Not found this command"
-    }
+        "notFoundCommand": "Not found this command",
+    },
 }
+
+
 class Tran:
     def __init__(self, translateMap: dict, lang: str):
         self.map = translateMap
         self.lang = lang
-    def run(self, placeholder: str, key: str):
+
+    def run(self, key: str, content: str = "<?>"):
         if not self.lang in self.map:
             if "en-us" in self.map:
                 language = "en-us"
@@ -41,7 +43,9 @@ class Tran:
                 language = next(iter(self.map))
         else:
             language = self.lang
-        return placeholder.replace("<?>", self.map[language][key])
+        return content.replace("<?>", self.map[language][key])
+
+
 tran = Tran(TRANMAP, SETTING["language"])
 
 
@@ -68,7 +72,7 @@ def runFunc(func, config: str, argsStart: int):
                             else ""
                         )
             except IndexError as error:
-                print(tran.run(f"<?>{error}\n{config}", "indexError"))
+                print(tran.run("indexError", f"<?>{error}\n{config}"))
                 return
         func(**data)
 
@@ -81,7 +85,7 @@ configArgs = {
     "path": PATH,
     "lang": SETTING["language"],
     "debug": SETTING["debug"],
-    "tools": {"tran": Tran}
+    "tools": {"tran": Tran},
 }
 for id, config in commandConfig.items():
     if id == ".".join(args[: len(id.split("."))]):
@@ -92,5 +96,5 @@ for id, config in commandConfig.items():
             getattr(func, "config")(**configArgs)
         runFunc(func.enter, config, len(args[: len(id.split("."))]) - 1)
         exit()
-logging.error(tran.run("<?>", "notFoundCommand"))
-print(tran.run("ERROR: <?>", "notFoundCommand"))
+logging.error(tran.run("notFoundCommand"))
+print(tran.run("notFoundCommand", "ERROR: <?>"))
