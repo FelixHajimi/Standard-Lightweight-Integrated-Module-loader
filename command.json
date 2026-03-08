@@ -5,11 +5,9 @@
   "file.load": "- <path> [encoding:utf-8]",
   "file.move": "- <path> <newPath>",
   "file.rename": "- <path> <newName>",
-
   "query": "-",
   "query.tree": "- <mode> [data] [configs]",
   "query.path": "- [path]",
   "query.cmd": "- [id]",
-
   "fex": "- <path> [encoding:utf-8] [plugin]"
 }
