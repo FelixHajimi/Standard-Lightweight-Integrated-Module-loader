@@ -1,9 +1,17 @@
+import logging
 import os
 import shutil
-import logging
 
 
-tran = None
+class Tran:
+    def __init__(self, translateMap: dict, lang: str):
+        ...
+
+    def run(self, key: str, content: str = "<?>") -> str:
+        ...
+
+
+tran: Tran
 TRANMAP = {
     "zh-cn": {"scuccess": "已移动文件"},
     "en-us": {"scuccess": "File moved"},
@@ -18,8 +26,8 @@ def config(path: str, lang: str, debug: str, tools: dict):
 def enter(path: str, newPath: str):
     shutil.move(path, newPath)
     logging.info(
-        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
+        f"{tran.run('scuccess')} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
     )
     print(
-        f"{tran.run("scuccess")} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
+        f"{tran.run('scuccess')} {os.path.abspath(path)} => {os.path.abspath(newPath)}"
     )

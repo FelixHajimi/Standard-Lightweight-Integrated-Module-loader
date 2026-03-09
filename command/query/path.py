@@ -1,10 +1,18 @@
-import pathlib
-import time
-import stat
 import os
+import pathlib
+import stat
+import time
 
 
-tran = None
+class Tran:
+    def __init__(self, translateMap: dict, lang: str):
+        ...
+
+    def run(self, key: str, content: str = "<?>") -> str:
+        ...
+
+
+tran: Tran
 TRANMAP = {
     "zh-cn": {
         "isFile": "文件?               ",
@@ -35,7 +43,7 @@ def enter(path: str):
         for file in os.listdir():
             p = pathlib.Path(os.path.abspath(file))
             print(
-                f"{file+("" if p.is_file() else "/")}{(len(max(os.listdir()))-len(file+("" if p.is_file() else "/"))) * " "}\t{p.stat().st_size if p.is_file() else "<DIR>"}"
+                f"{file + ('' if p.is_file() else '/')}{(len(max(os.listdir())) - len(file + ('' if p.is_file() else '/'))) * ' '}\t{p.stat().st_size if p.is_file() else '<DIR>'}"
             )
     elif pathlib.Path(path).exists():
 

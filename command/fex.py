@@ -1,8 +1,18 @@
 import curses
-import os
-import logging
 import importlib.util as pathImport
+import logging
+import os
 
+
+class Tran:
+    def __init__(self, translateMap: dict, lang: str):
+        ...
+
+    def run(self, key: str, content: str = "<?>") -> str:
+        ...
+
+
+tran: Tran
 TRAN = {
     "zh-cn": {
         "encodingError": "请检查打开编码是否正确: ",
@@ -63,7 +73,6 @@ Write mode: You can edit the file
     [*]            Write text at the corresponding position in the file""",
     },
 }
-tran = None
 
 
 def config(path: str, lang: str, debug: str, tools: dict):
@@ -77,7 +86,7 @@ def enter(path: str, encoding: str, plugin: str):
         mode = "COMMAND"
         curY, curX = 0, 0
         viewOffset = 0
-        stateText = f"{mode}: {curY+1} - {curX}"
+        stateText = f"{mode}: {curY + 1} - {curX}"
         pause = False
         highlight = []
         commands = []
@@ -87,7 +96,7 @@ def enter(path: str, encoding: str, plugin: str):
             if not fileContent:
                 fileContent = [""]
         except UnicodeDecodeError:
-            print(f"{tran.run("encodingError")}{encoding}")
+            print(f"{tran.run('encodingError')}{encoding}")
             return
 
         def runCommand(text: str):
@@ -103,44 +112,44 @@ def enter(path: str, encoding: str, plugin: str):
                     elif len(command) == 2:
                         return eval(tran.run("lineCharCount"))
                     else:
-                        return f"{tran.run("using")}length [lineNumber]"
+                        return f"{tran.run('using')}length [lineNumber]"
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             elif command[0] == "info":
                 try:
                     label = " ".join(command[1:])
                     logging.info(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             elif command[0] == "warn":
                 try:
                     label = " ".join(command[1:])
                     logging.warning(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             elif command[0] == "error":
                 try:
                     label = " ".join(command[1:])
                     logging.error(label)
                     return label[: width - 1]
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             elif command[0] == "saveto":
                 try:
                     open(command[1], "a", encoding=command[2]).write(
                         "\n".join(fileContent)
                     )
-                    return f"{tran.run("saveto")}{os.path.abspath(command[1])}"
+                    return f"{tran.run('saveto')}{os.path.abspath(command[1])}"
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             elif command[0] == "exec":
                 try:
                     exec(" ".join(command[1:]))
                     return tran.run("successExec")
                 except Exception as error:
-                    return f"{tran.run("error")}{error}"
+                    return f"{tran.run('error')}{error}"
             for func in commands:
                 text = func(command)
                 if text:
@@ -154,16 +163,18 @@ def enter(path: str, encoding: str, plugin: str):
         curses.init_pair(3, curses.COLOR_YELLOW, -1)
         curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_GREEN)
 
-        if not plugin is None:
+        if plugin is not None:
             spec = pathImport.spec_from_file_location("highlight", plugin)
-            module = pathImport.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            module.ready({"commands": commands})
+            module = None
+            if spec and spec.loader:
+                module = pathImport.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                module.ready({"commands": commands})
         while run:
             # 主要渲染
             height, width = window.getmaxyx()
             window.clear()
-            if not plugin is None:
+            if plugin and module:
                 module.update(
                     {
                         "highlight": highlight,
@@ -199,7 +210,7 @@ def enter(path: str, encoding: str, plugin: str):
                             window.addch(row + 1, len(lineNumber) + column, char)
 
             if not pause:
-                stateText = f"{mode}: {curY+1} - {curX}"
+                stateText = f"{mode}: {curY + 1} - {curX}"
             pause = False
             window.addstr(
                 height - 1,
@@ -249,7 +260,7 @@ def enter(path: str, encoding: str, plugin: str):
                     run = False
                 elif key == ord("s"):
                     open(path, "w", encoding=encoding).write("\n".join(fileContent))
-                    stateText = f"{tran.run("save")}{path}"
+                    stateText = f"{tran.run('save')}{path}"
                     pause = True
                 elif key == ord("h"):
                     stateText = tran.run("help")

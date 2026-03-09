@@ -4,10 +4,12 @@ import pathlib
 import re
 
 
-def draw(structure: dict[str, str | dict], level: int=0, spaceLevel: list=[]):
+def draw(structure: dict[str, str | dict], level: int = 0, spaceLevel: list = []):
     for key, value in structure.items():
         isend = len(structure) - 1 == list(structure.keys()).index(key)
-        tabChar = "".join("   " if col in spaceLevel else "│  " for col in range(level)) + ("└─" if isend else "├─")
+        tabChar = "".join(
+            "   " if col in spaceLevel else "│  " for col in range(level)
+        ) + ("└─" if isend else "├─")
         if isinstance(value, str):
             print(f"{tabChar} {key}{value}")
         elif isinstance(value, dict):
@@ -19,8 +21,9 @@ def draw(structure: dict[str, str | dict], level: int=0, spaceLevel: list=[]):
                 spaceLevel.pop()
 
 
-def folder(root: str, ignore: list[str]=[]):
+def folder(root: str, ignore: list[str] = []):
     res = {}
+
     def func(master: dict, masterFloder: str):
         files = os.listdir(masterFloder)
         for file in files:
@@ -30,19 +33,30 @@ def folder(root: str, ignore: list[str]=[]):
                     if re.fullmatch(item, file):
                         finded = True
                         break
-                if finded: continue
-                fileData = pathlib.Path(masterFloder+"/"+file)
+                if finded:
+                    continue
+                fileData = pathlib.Path(masterFloder + "/" + file)
                 if fileData.is_file():
                     master[file] = ""
                 else:
                     master[file] = {}
-                    func(master[file], masterFloder+"/"+file+"/")
-            except:
+                    func(master[file], masterFloder + "/" + file + "/")
+            except Exception:
                 continue
+
     func(res, root)
     return res
 
-tran = None
+
+class Tran:
+    def __init__(self, translateMap: dict, lang: str):
+        ...
+
+    def run(self, key: str, content: str = "<?>") -> str:
+        ...
+
+
+tran: Tran
 TRANMAP = {
     "zh-cn": {
         "help": """用法: - <mode> [data] "[configs]"
@@ -69,14 +83,18 @@ Configs                       Multiple parameters are separated by semicolons (E
         "notFoundMode": "Not found this mode: ",
     },
 }
+
+
 def config(path: str, lang: str, debug: str, tools: dict):
     global tran
     tran = tools["tran"](TRANMAP, lang)
 
 
-def enter(mode: str, data: str, configs: str):
-    if not configs is None:
-        config = {item.split("=")[0]: item.split("=")[-1] for item in configs.split(";")}
+def enter(mode: str, data: str, configs: str | None):
+    if configs is not None:
+        config = {
+            item.split("=")[0]: item.split("=")[-1] for item in configs.split(";")
+        }
     else:
         config = {"encoding": "utf-8"}
 
