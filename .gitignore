@@ -1,4 +1,4 @@
-# Python env
+# Python
 .venv
 __pycache__
 
@@ -15,3 +15,7 @@ __pycache__
 
 # Program
 slim.exe
+
+# Test
+test.*
+test
