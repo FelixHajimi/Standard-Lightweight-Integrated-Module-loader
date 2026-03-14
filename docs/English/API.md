@@ -2,16 +2,8 @@
 
 ## Example
 ```py
+# See line 190 of the program, which contains all passed configurations
 # script.py
-"""
-See line 190 of the program
-configArgs = {
-    "path": PATH,
-    "lang": SETTING["language"],
-    "debug": SETTING["debug"],
-    "tools": {"tran": Tran},
-}
-"""
 def config(path: str, lang: str, debug: bool, tools: dict[str, any]):
     pass
 
@@ -26,4 +18,5 @@ Parameter explanation
 - path, the path of the main program, see line 161 of the program
 - lang, the global language, can be used with `tools["tran"]`
 - debug, the global debug mode, can output detailed information in debug mode
+- other, other included settings
 - tools, tools that may be used, currently includes one tool, Tran, see line 137 of the program or check the "Tools" document
