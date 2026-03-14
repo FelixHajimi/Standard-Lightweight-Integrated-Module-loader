@@ -20,7 +20,9 @@ def runFunc(enter, config: str, argStartIndex: int):
                 elif arg[0] == "[" and arg[-1] == "]":
                     if ":" in arg:
                         if len(args) - 1 >= index + 1 + argStartIndex:
-                            data[arg[1:-1].split(":")[0]] = args[index + 1 + argStartIndex]
+                            data[arg[1:-1].split(":")[0]] = args[
+                                index + 1 + argStartIndex
+                            ]
                         else:
                             data[arg[1:-1].split(":")[0]] = arg[1:-1].split(":")[1]
                     else:
@@ -30,7 +32,9 @@ def runFunc(enter, config: str, argStartIndex: int):
                             else None
                         )
                 elif arg[0] == "@":
-                    match = re.fullmatch(r"([a-zA-Z_][a-zA-Z\d_]*)(\(.*\))?(:\d+)?", arg[1:])
+                    match = re.fullmatch(
+                        r"([a-zA-Z_][a-zA-Z\d_]*)(\(.*\))?(:\d+)?", arg[1:]
+                    )
                     if not match or not match.group(1):
                         continue
 
@@ -58,64 +62,64 @@ def runFunc(enter, config: str, argStartIndex: int):
         enter(**data)
 
 
-def runAdminFunc(adminArgs: list[str]):
-    class AdminCommands:
-        def __init__(self, debug: bool = False):
-            self.debug = debug
+class AdminCommands:
+    def __init__(self, debug: bool = False):
+        self.debug = debug
 
-        def help(self, id: str | None):
-            TRAN = {
-                "zh-cn": {"notFoundCommand": "未找到此命令: "},
-                "en-us": {"notFoundCommand": "Not found this command: "},
-            }
-            tran = Tran(TRAN, SETTING["language"])
-            commands = json.load(open(f"{PATH}/command.json", encoding="utf-8"))
-            if id is None:
-                for id, config in commands.items():
-                    print(f"{id} : {config}")
-            else:
-                try:
-                    print(f"{id} : {commands[id]}")
-                except KeyError:
-                    logging.error(f"{tran.run('notFoundCommand')}{id}")
-                    print(f"{tran.run('notFoundCommand')}{id}")
+    def help(self, id: str | None):
+        TRAN = {
+            "zh-cn": {"notFoundCommand": "未找到此命令: "},
+            "en-us": {"notFoundCommand": "Not found this command: "},
+        }
+        tran = Tran(TRAN, SETTING["language"])
+        commands = json.load(open(f"{PATH}/command.json", encoding="utf-8"))
+        if id is None:
+            for id, config in commands.items():
+                print(f"{id} : {config}")
+        else:
+            try:
+                print(f"{id} : {commands[id]}")
+            except KeyError:
+                logging.error(f"{tran.run('notFoundCommand')}{id}")
+                print(f"{tran.run('notFoundCommand')}{id}")
 
-        def create(self, id: str | None, config: str | None):
-            TRAN = {
-                "zh-cn": {"createdFile": "已创建新文件至: "},
-                "en-us": {"createdFile": "A new file has been created at: "},
-            }
-            tran = Tran(TRAN, SETTING["language"])
-            commandConfig = json.load(
-                open(f"{PATH}/{SETTING['commandConfig']}", encoding="utf-8")
-            )
-            if id is None and config is None:
-                for id, config in commandConfig.items():
-                    if id is None or config is None:
-                        return
-                    path = (
-                        f"{PATH}/{SETTING['commandDir']}/{'/'.join(id.split('.'))}.py"
+    def create(self, id: str | None, config: str | None):
+        TRAN = {
+            "zh-cn": {"createdFile": "已创建新文件至: "},
+            "en-us": {"createdFile": "A new file has been created at: "},
+        }
+        tran = Tran(TRAN, SETTING["language"])
+        commandConfig = json.load(
+            open(f"{PATH}/{SETTING['commandConfig']}", encoding="utf-8")
+        )
+        if id is None and config is None:
+            for id, config in commandConfig.items():
+                if id is None or config is None:
+                    return
+                path = f"{PATH}/{SETTING['commandDir']}/{'/'.join(id.split('.'))}.py"
+                p = pathlib.Path(path)
+                if not p.exists():
+                    p.touch()
+                    argsText = ""
+                    for arg in config.split(" ")[1:]:
+                        if arg[0] == "<" and arg[-1] == ">":
+                            argsText = f"{argsText}, {arg[1:-1]}: str"
+                        elif arg[0] == "[" and arg[-1] == "]":
+                            argsText = f"{argsText}, {arg[1:-1].split(':')[0]}: str"
+                    open(path, "w", encoding="utf-8").write(
+                        f"def config(**args):\n    pass\n\ndef enter({argsText[2:]}):\n    pass"
                     )
-                    p = pathlib.Path(path)
-                    if not p.exists():
-                        p.touch()
-                        argsText = ""
-                        for arg in config.split(" ")[1:]:
-                            if arg[0] == "<" and arg[-1] == ">":
-                                argsText = f"{argsText}, {arg[1:-1]}: str"
-                            elif arg[0] == "[" and arg[-1] == "]":
-                                argsText = f"{argsText}, {arg[1:-1].split(':')[0]}: str"
-                        open(path, "w", encoding="utf-8").write(
-                            f"def config(**args):\n    pass\n\ndef enter({argsText[2:]}):\n    pass"
-                        )
-                        print(tran.run("createdFile", f"<?>{path}"))
-            else:
-                commandConfig[id] = "-" if config is None else config
-                open(SETTING["commandConfig"], "w", encoding="utf-8").write(
-                    json.dumps(commandConfig, indent=2, ensure_ascii=False)
-                )
-                print(tran.run("createdFile", f"<?>{SETTING['commandConfig']}"))
-                self.create(None, None)
+                    print(tran.run("createdFile", f"<?>{path}"))
+        else:
+            commandConfig[id] = "-" if config is None else config
+            open(SETTING["commandConfig"], "w", encoding="utf-8").write(
+                json.dumps(commandConfig, indent=2, ensure_ascii=False)
+            )
+            print(tran.run("createdFile", f"<?>{SETTING['commandConfig']}"))
+            self.create(None, None)
+
+
+def runAdminFunc(adminArgs: list[str]):
 
     admin = AdminCommands(SETTING["debug"])
     adminCommands = {
