@@ -17,7 +17,8 @@ def configParser(config: str):
         )
         if match1:
             if not match1.group(2):
-                raise SyntaxError(tran.run("fillName", f"<?>{arg}"))
+                logging.error(tran.run("fillName", f"<?>{arg}"))
+                print(tran.run("fillName", f"<?>{arg}"))
             res.append(
                 {
                     "type": 1,
@@ -29,7 +30,8 @@ def configParser(config: str):
             )
         elif match2:
             if not match2.group(2):
-                raise SyntaxError(tran.run("fillName", f"<?>{arg}"))
+                logging.error(tran.run("fillName", f"<?>{arg}"))
+                print(tran.run("fillName", f"<?>{arg}"))
             res.append(
                 {
                     "type": 2,
@@ -41,7 +43,8 @@ def configParser(config: str):
                 }
             )
         else:
-            raise SyntaxError(tran.run("notMatchFormat", f"<?>{arg}"))
+            logging.error(tran.run("notMatchFormat", f"<?>{arg}"))
+            print(tran.run("notMatchFormat", f"<?>{arg}"))
     return res
 
 
@@ -102,6 +105,7 @@ def runFunc(enter, config: str, argStartIndex: int):
                 else:
                     print("ERROR")
             except IndexError:
+                logging.error(eval(tran.run("requiredError")))
                 print(eval(tran.run("requiredError")))
                 return
         enter(**data)
@@ -244,7 +248,11 @@ configArgs = {
     "lang": SETTING["language"],
     "debug": SETTING["debug"],
     "other": SETTING["other"],
-    "tools": {"tran": Tran},
+    "tools": {
+        "tran": Tran,
+        "configParser": configParser,
+        "runFunc": runFunc,
+    },
 }
 
 
