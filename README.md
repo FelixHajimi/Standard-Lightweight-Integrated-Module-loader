@@ -1,57 +1,57 @@
 # SLIM
 > **S**tandard **L**ightweight **I**ntegrated **M**odule-loader
 
-## Core Philosophy: Minimize Definition Cost
+The original design intention of SLIM is only one: **to compress the "definition cost" of command-line tools to the limit**
 
-SLIM has one single design goal: **to compress the "definition cost" of command-line tools to the absolute limit.**
+- **Traditional process**: Create parser -> Add parameters one by one -> Set type/help/default value -> Write parsing logic -> Handle exceptions -> **Start writing business logic**
+- **SLIM process**: Write one line of configuration string -> **Directly write business logic**
 
-- **Traditional Workflow**: Create parser -> Add arguments one by one -> Set types/help/defaults -> Write parsing logic -> Handle exceptions -> **Start writing business logic**.
-- **SLIM Workflow**: Write one configuration string -> **Start writing business logic immediately**.
-
-You don't need to learn complex APIs or initialize objects. As soon as you write the parameter string, your command is defined.
+You don't need to learn complex APIs, don't need to initialize objects, as long as you can write a parameter string, your command is defined
 
 ```python
-# Traditional Way: Dozens of lines of boilerplate
+# Traditional way: dozens of lines of boilerplate
 parser = argparse.ArgumentParser()
 parser.add_argument('output', help='Output directory')
 parser.add_argument('--verbose', action='store_true', help='Verbose mode')
 parser.add_argument('files', nargs='+', help='Input files')
 args = parser.parse_args()
-# ... Still need to handle type conversion and validation ...
+# ... also need to handle type conversion and validation ...
 
-# SLIM Way: Defined in one line
+# SLIM way: one line definition
 # command.json
 { "script": "- <output> [verbose:true] @files" }
 
-# Corresponding business function with auto-injected parameters
+# Corresponding business function, parameters automatically injected
 def enter(output: str, verbose: str, files: list[str]):
-    # Start writing core logic directly; no parsing code needed upfront
+    # Directly start writing core logic, no preprocessing parsing code needed
     pass
 ```
 
-## Syntax Quick Reference
+## Syntax Overview
 
-All complex parameter logic is condensed into a few simple symbols.
-Master these symbols, and you can define any command.
+All complex parameter logic is condensed into a few simple symbols
 
-| Symbol | Example | Effect |
+Remember these symbols, and you can define any command
+
+| Symbol | Example | Definition Effect |
 | :---: | :--- | :--- |
-| **`<Required>`** | `<file>` | Mandatory input; throws error if missing |
-| **`[Optional]`** | `[debug]` | Optional input; becomes `None` if missing |
-| **`[Optional:Default]`** | `[port:8080]` | Auto-fills default value if user input is missing |
-| **`@Array`** | `@src` | Collects all remaining arguments into a list |
-| **`@Array(Regex)`** | `@log(\.txt$)` | List items must match regex; others become `None` |
-| **`@Array:Length`** | `@vec:3` | Forces list length to 3; pads with `None` if insufficient |
+| **`<required parameter>`** | `<file>` | Forces user input, reports an error if missing |
+| **`[optional parameter]`** | `[debug]` | User can input or not, defaults to `None` if missing |
+| **`(regular expression)`** | `<@file(.*\.(?:png\|jpg\|svg))>` | Regex validation |
+| **`:length`** | `<@file:5>` | Specifies length |
+| **`=default value`** | `[port=8080]` | Automatically fills with default value when user does not input |
+
+**Must be written in the order `(regex):length=default value`**
 
 ---
 
 ## How to Use
 
-After cloning the repository, you will have the core engine `slim.py`. Creating a new command takes just three steps.
+After cloning the repository, you will get the core engine `slim.py`, and you can create a new command in just three steps
 
-### Step 1: Global Configuration
+### Step 1: Global Settings
 
-Create a `setting.json` file in your project root with the following content:
+Create `setting.json` in your project directory and enter the following content
 ```json
 {
   "language": "en-us",
@@ -61,67 +61,67 @@ Create a `setting.json` file in your project root with the following content:
 }
 ```
 
-### Step 2: Define the Interface
+### Step 2: Define Interface
 
-Edit `command.json` and describe your command structure in a single string.
+Edit `command.json` and describe your command structure with one line string
 
 ```json
 {
   "compress_images": "- <output_dir> [quality:80] @images(.*\\.(png|jpg))"
 }
 ```
-*That's it. No classes, no function signatures, no parsing logic required.*
+*That's it for definition, no need to write classes, function signatures, or parsing logic*
 
 ### Step 3: Implement Business Logic
 
-Create a file named `compress_images.py` (matching the command key) inside the `command` directory.
-SLIM automatically reads the configuration, parses the arguments, and injects them into the `enter` function in order.
+Create a file with the same name `compress_images.py` in the `command` directory
+SLIM will automatically read the configuration, parse parameters, and inject them into the `enter` function in order
 
 ```python
 # command/compress_images.py
 
 def enter(output_dir: str, quality: str, images: list[str]):
-    # All parameters are now parsed and cleaned
-    # output_dir: Required string
-    # quality: String, defaults to "80"
-    # images: List containing only files matching .png or .jpg
+    # At this point, all parameters have been parsed and cleaned
+    # output_dir: required string
+    # quality: string, defaults to "80"
+    # images: list, only contains files matching .png or .jpg
     
     valid_images = [img for img in images if img is not None]
     
-    print(f"Task Started: Compressing {len(valid_images)} files to {output_dir}")
-    print(f"Quality Setting: {quality}")
+    print(f"Task started: compressing {len(valid_images)} files to {output_dir}")
+    print(f"Quality setting: {quality}")
     
-    # Write your core business logic here
+    # Directly write core business code here
     # ...
 ```
 
-### Running the Command
+### Run
 
-Configure an alias for quick access (optional):
+Configure an alias for quick calling (optional):
 ```bash
-function slim { python slim.py "$@"; }
+function slim { python slim.py $@;}
 ```
 
-Execute the command:
+Execute command:
 ```bash
 slim compress_images ./dist 90 ./src/a.png ./src/b.txt ./src/c.jpg
 ```
 
-**Parsing Result:**
+**Parsing result:**
 - `output_dir` = `"./dist"`
-- `quality` = `"90"` (Overrides the default value)
+- `quality` = `"90"` (overrides default value)
 - `images` = `["./src/a.png", None, "./src/c.jpg"]` (`b.txt` is automatically marked as `None` because it doesn't match the regex)
 
 ---
 
-## Why SLIM Drastically Improves Efficiency?
+## Why SLIM Can Greatly Improve Efficiency?
 
-1.  **Definition is Completion**: Once the parameter string is written, the interface definition is done. No intermediate steps.
-2.  **Pure Logic**: Business functions contain zero code for parsing, type conversion, or validation. Only pure business logic remains.
-3.  **Configuration-Driven**: Modifying command behavior only requires changing the string in JSON, without touching Python code. Ideal for rapid prototyping.
-4.  **Automatic Cleaning**: Data filtering is handled at the definition stage using regex syntax, ensuring the business layer receives highly usable data.
+1.  **Definition is Completion**: Once the parameter string is written, the interface definition is done, no intermediate steps
+2.  **Clean Logic**: There is no parameter parsing, type conversion, or validation code in business functions, only pure business logic
+3.  **Configuration Driven**: Modifying command behavior only requires changing the string in JSON, no need to touch Python code, suitable for rapid prototype iteration
+4.  **Automatic Cleaning**: Using regex syntax completes data filtering at the definition stage, and the data received by the business layer is highly usable
 
-## Specifications & Constraints
+## Specifications and Constraints
 
--   **Filename Matching**: Filenames in `command/*.py` must strictly match the keys in `command.json`.
--   **Parameter Order**: The order of parameters in the `enter` function must strictly match the order defined in the configuration string.
+- **Filename matching**: Filenames in `command/*.py` must strictly match the key names in `command.json`
+- **Parameter order**: The parameter order in the `enter` function must be exactly the same as the definition order in the configuration string
