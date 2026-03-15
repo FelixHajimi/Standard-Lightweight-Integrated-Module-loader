@@ -88,8 +88,8 @@ def config(lang: str, tools: dict, **args):
     tran = tools["tran"](TRANMAP, lang)
 
 
-def enter(mode: str, data: str | None, configs: str | None):
-    if not data:
+def enter(mode: str, data: str, configs: str | None):
+    if not data and mode != "help":
         return
     if configs is not None:
         config = {
