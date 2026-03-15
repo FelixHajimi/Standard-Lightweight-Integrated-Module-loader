@@ -100,7 +100,7 @@ def enter(output_dir: str, quality: str, images: list[str]):
 
 配置别名以便快速调用(可选):
 ```bash
-function slim { python slim.py @args;}
+function slim { python slim.py $@;}
 ```
 
 执行命令:
