@@ -1,7 +1,7 @@
 # This article will explain the usage of all tools in the config function API
 
 ## tran-Tran
-This is a translation tool, see line 137 of the program
+This is a translation tool, see line 180 of the program
 It has a built-in `run` method that can return a string as translated text
 ### Example
 ```py
