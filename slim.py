@@ -18,7 +18,9 @@ def configParser(config: str):
         if match1:
             if not match1.group(2):
                 logging.error(tran.run("fillName", f"<?>{arg}"))
-                print(tran.run("fillName", f"<?>{arg}"))
+                print(
+                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('fillName', f'<?>{arg}')}\033[0m"
+                )
             res.append(
                 {
                     "type": 1,
@@ -31,7 +33,9 @@ def configParser(config: str):
         elif match2:
             if not match2.group(2):
                 logging.error(tran.run("fillName", f"<?>{arg}"))
-                print(tran.run("fillName", f"<?>{arg}"))
+                print(
+                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('fillName', f'<?>{arg}')}\033[0m"
+                )
             res.append(
                 {
                     "type": 2,
@@ -44,7 +48,9 @@ def configParser(config: str):
             )
         else:
             logging.error(tran.run("notMatchFormat", f"<?>{arg}"))
-            print(tran.run("notMatchFormat", f"<?>{arg}"))
+            print(
+                f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('notMatchFormat', f'<?>{arg}')}\033[0m"
+            )
     return res
 
 
@@ -65,7 +71,7 @@ def runFunc(enter, config: str, argStartIndex: int):
                             data[arg["name"]] = args[
                                 argIndex : argIndex + arg["number"]
                             ]
-                            for i in range(arg["number"] - len(data[arg["name"]])):
+                            for _ in range(arg["number"] - len(data[arg["name"]])):
                                 data[arg["name"]].append(None)
                         if arg["regex"] is not None:
                             for index, text in enumerate(data[arg["name"]]):
@@ -84,7 +90,7 @@ def runFunc(enter, config: str, argStartIndex: int):
                             data[arg["name"]] = args[
                                 argIndex : argIndex + arg["number"]
                             ]
-                            for i in range(arg["number"] - len(data[arg["name"]])):
+                            for _ in range(arg["number"] - len(data[arg["name"]])):
                                 data[arg["name"]].append(None)
                         if arg["regex"] is not None:
                             for index, text in enumerate(data[arg["name"]]):
@@ -103,10 +109,13 @@ def runFunc(enter, config: str, argStartIndex: int):
                         else:
                             data[arg["name"]] = args[argIndex]
                 else:
-                    print("ERROR")
+                    logging.error(f"{tran.run('notFoundFormat')}{arg['type']}")
+                    print(f"{tran.run('notFoundFormat')}{arg['type']}")
             except IndexError:
                 logging.error(eval(tran.run("requiredError")))
-                print(eval(tran.run("requiredError")))
+                print(
+                    f"\033[48;2;255;0;0;38;2;255;255;255m{eval(tran.run('requiredError'))}\033[0m"
+                )
                 return
         enter(**data)
 
@@ -125,7 +134,9 @@ class AdminCommands:
                 print(f"{id} : {commands[id]}")
             except KeyError:
                 logging.error(f"{tran.run('notFoundCommand')}{id}")
-                print(f"{tran.run('notFoundCommand')}{id}")
+                print(
+                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('notFoundCommand')}{id}\033[0m"
+                )
 
     def create(self, id: str | None, config: str | None):
         commandConfig = json.load(
@@ -153,6 +164,7 @@ class AdminCommands:
                     open(path, "w", encoding="utf-8").write(
                         f"def config(**args):\n    pass\n\ndef enter({argsText[2:]}):\n    pass"
                     )
+                    logging.info(tran.run("createdFile", f"<?>{path}"))
                     print(tran.run("createdFile", f"<?>{path}"))
         else:
             commandConfig[id] = "-" if config is None else config
@@ -175,10 +187,13 @@ def runAdminFunc(adminArgs: list[str]):
     }
     for command, config in adminCommands.items():
         if command == ".".join(adminArgs[: len(command.split("."))]):
+            logging.info(tran.run("runningAdminCommand"))
             runFunc(config[1], config[0], len(command.split(".")))
             exit()
-    logging.error(tran.run("notFoundCommand", f"<?>: {args}"))
-    print(tran.run("notFoundCommand", f"<?>: {args}"))
+    logging.error(tran.run("notFoundCommand", f"<?>{args}"))
+    print(
+        f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('notFoundCommand', f'<?>{args}')}\033[0m"
+    )
 
 
 class Tran:
@@ -213,6 +228,10 @@ TRAN = {
         "createdFile": "已创建文件至: ",
         "fillName": "请填写参数名: ",
         "notMatchFormat": "没有匹配此格式的参数: ",
+        "notFoundCommandFile": "检测到命令文件不存在,程序已退出",
+        "runningCommand": "正在运行命令",
+        "runningAdminCommand": "正在运行管理员命令",
+        "notFoundFormat": "没有此格式: ",
     },
     "en-us": {
         "requiredError": 'f"You have a required parameter not filled: should be filled at position {index}, parameter name is {arg["name"]}"',
@@ -220,6 +239,10 @@ TRAN = {
         "createdFile": "File created at: ",
         "fillName": "Please fill in parameter name: ",
         "notMatchFormat": "No parameter matching this format: ",
+        "notFoundCommandFile": "Command file not detected, the program has exited",
+        "runningCommand": "Running command",
+        "runningAdminCommand": "Running admin command",
+        "notFoundFormat": "This format does not exist: ",
     },
 }
 SETTING = json.load(open(f"{PATH}/setting.json", encoding="utf-8"))
@@ -258,14 +281,24 @@ configArgs = {
 
 for id, config in commandConfig.items():
     if id == ".".join(args[: len(id.split("."))]):
-        spec = pathImport.spec_from_file_location("func", commands[id])
-        if not spec or not spec.loader:
+        try:
+            spec = pathImport.spec_from_file_location("func", commands[id])
+            if not spec or not spec.loader:
+                raise
+            func = pathImport.module_from_spec(spec)
+            spec.loader.exec_module(func)
+        except Exception:
+            logging.warning(tran.run("notFoundCommandFile"))
+            print(
+                f"\033[48;2;255;255;0;38;2;255;255;255m{tran.run('notFoundCommandFile')}\033[0m"
+            )
             exit()
-        func = pathImport.module_from_spec(spec)
-        spec.loader.exec_module(func)
         if hasattr(func, "config"):
             getattr(func, "config")(**configArgs)
+        logging.info(tran.run("runningCommand"))
         runFunc(func.enter, config, len(args[: len(id.split("."))]) - 1)
         exit()
-logging.error(tran.run("notFoundCommand", f"<?>: {args}"))
-print(tran.run("notFoundCommand", f"<?>: {args}"))
+logging.error(tran.run("notFoundCommand", f"<?>{args}"))
+print(
+    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('notFoundCommand', f'<?>{args}')}\033[0m"
+)
