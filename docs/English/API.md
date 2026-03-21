@@ -18,4 +18,4 @@ Parameter explanation
 - lang, the global language, can be used with `tools["tran"]`
 - debug, the global debug mode, can output detailed information in debug mode
 - other, other included settings
-- tools, tools that may be used, currently includes one tool, Tran, see line 180 of the program or check the "Tools" document
+- tools, tools that may be used,Check the "Tools" document
