@@ -52,9 +52,9 @@ slim --admin create test "- <name>"
 slim --admin create [id] [format]
 ```
 ### Explanation
-If neither the `id parameter` nor the `format parameter` is written, it will scan `commandConfig` and check whether the command ID exists in `commandDir`
-If it does not exist, it will be created in `commandDir` with parameters written
+If neither the `id parameter` nor the `format parameter` is written, it will scan `command_config` and check whether the command ID exists in `command_dir`
+If it does not exist, it will be created in `command_dir` with parameters written
 
-If the `id parameter` is written, this `id` will be added to `commandConfig` and `commandDir`, but the parameter format will be `-`
+If the `id parameter` is written, this `id` will be added to `command_config` and `command_dir`, but the parameter format will be `-`
 
-If both the `format parameter` and `id parameter` are written, this `id` and the corresponding `format` will be added to `commandConfig` and `commandDir`
+If both the `format parameter` and `id parameter` are written, this `id` and the corresponding `format` will be added to `command_config` and `command_dir`

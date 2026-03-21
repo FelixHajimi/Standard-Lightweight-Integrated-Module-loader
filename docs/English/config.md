@@ -27,6 +27,6 @@ Array parameter regex can also be used with length: `- @args(\d+):5`, meaning ta
 
 ## Command ID
 `"This is the command ID, used to specify where the command is called": "format"`  
-It should be noted that: The ID must be written in the file pointed to by `commandConfig` in your `setting.json`  
-And the ID must be separated by `"."`, for example `file.add` means in `commandDir/file/add.py`  
-Then `file` means in `commandDir/file.py`
+It should be noted that: The ID must be written in the file pointed to by `command_config` in your `setting.json`  
+And the ID must be separated by `"."`, for example `file.add` means in `command_dir/file/add.py`  
+Then `file` means in `command_dir/file.py`

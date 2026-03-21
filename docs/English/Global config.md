@@ -5,13 +5,13 @@
 ```json
 {
   "language": "en-us",
-  "commandConfig": "command.json",
-  "commandDir": "command",
+  "command_config": "command.json",
+  "command_dir": "command",
   "debug": false
 }
 ```
 
 - language is the global language, such as en-us, indicating that all commands uniformly use English for output/logging
-- commandConfig is the command configuration, command.json means that all command configurations are stored in the command.json file
-- commandDir is the command calling folder, after reading commandConfig, files will be called within this folder
+- command_config is the command configuration, command.json means that all command configurations are stored in the command.json file
+- command_dir is the command calling folder, after reading command_config, files will be called within this folder
 - debug is a global switch, commands can modify some logic through debug
