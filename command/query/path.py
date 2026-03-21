@@ -35,7 +35,7 @@ TRANMAP = {
 
 def config(lang: str, tools: dict, **args):
     global tran
-    tran = tools["tran"](TRANMAP, lang)
+    tran = tools["Tran"](TRANMAP, lang)
 
 
 def enter(path: str | None):

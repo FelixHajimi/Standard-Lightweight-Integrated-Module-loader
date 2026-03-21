@@ -85,7 +85,7 @@ Configs                       Multiple parameters are separated by semicolons (E
 
 def config(lang: str, tools: dict, **args):
     global tran
-    tran = tools["tran"](TRANMAP, lang)
+    tran = tools["Tran"](TRANMAP, lang)
 
 
 def enter(mode: str, data: str, configs: str | None):
