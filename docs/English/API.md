@@ -2,7 +2,6 @@
 
 ## Example
 ```py
-# See line 242 of the program, which contains all passed configurations
 # script.py
 def config(path: str, lang: str, debug: bool, tools: dict[str, any]):
     pass

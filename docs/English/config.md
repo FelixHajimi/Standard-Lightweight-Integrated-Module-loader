@@ -1,32 +1,67 @@
 # This article will explain how to configure `command.json`
 
-## Example
+## command.json Configuration Guide
+
+`command.json` is the command configuration file used to define the parameter formats and types for all available commands. This file is located in the `PATH` directory, with the specific path specified by the `command_config` field in `setting.json`.
+
+### File Format
+
 ```json
 {
-  "status": "-",
-  "scan": "- <mode> [timeout:10] @targets(^[a-z]+$):3",
-  "upload": "- @files(\\.png$)"
+    "Command ID": "Command configuration string",
+    "Command ID.subcommand": "Command configuration string"
 }
 ```
 
-## Parameter Concepts
-`"script": "This is the parameter format, parameters are filled in the parameter format, separated by spaces"`
-| Symbol | Example | Definition Effect |
-| :---: | :--- | :--- |
-| **`-`** | `-` | Represents the command itself |
-| **`<required parameter>`** | `<file>` | Forces user input, reports an error if missing |
-| **`[optional parameter]`** | `[debug]` | User can input or not, defaults to `None` if missing |
-| **`[optional parameter:default value]`** | `[port:8080]` | Automatically fills with default value when user does not input |
-| **`@array parameter`** | `@src` | Automatically collects all remaining parameters as a list |
-| **`@array parameter (regex)`** | `@log(\.txt$)` | List items must match the regex, otherwise set to `None` |
-| **`@array parameter:length`** | `@vec:3` | Forces list length to be 3, fills with `None` if insufficient |
+Command IDs use dots to indicate hierarchy, but are separated by spaces when used on the command line.
 
-**Note**: Each parameter format must be prefixed with `-` or `- `. If there are other parameters after it, use `- `; if not, use `-`  
-If only `-` is written in the parameter format, the `enter` function will be called directly  
-Array parameter regex can also be used with length: `- @args(\d+):5`, meaning take the last 5 parameters and all parameters that match the regex
+### Command Configuration String Syntax
 
-## Command ID
-`"This is the command ID, used to specify where the command is called": "format"`  
-It should be noted that: The ID must be written in the file pointed to by `command_config` in your `setting.json`  
-And the ID must be separated by `"."`, for example `file.add` means in `command_dir/file/add.py`  
-Then `file` means in `command_dir/file.py`
+Two parameter types are supported:
+- Required parameter: `<parameter name(regex):length>type`
+- Optional parameter: `[parameter name(regex):length=default value]type`
+
+#### Parameter Descriptions
+- **Parameter name**: Consists of letters, numbers, and underscores, must start with a letter or underscore
+- **Regex** (optional): Wrapped in parentheses, requires double escaping in JSON
+- **Length** (optional): `:number` for fixed-length array, `:0` for capturing all remaining parameters
+- **Default value** (optional): Only available for optional parameters, format `=value`
+- **Type** (optional): `string` (default), `int`, `float`, `bool`, `json`
+
+### Examples
+
+#### Basic Examples
+```json
+{
+    "user": "<action>",
+    "user.add": "<name> [age]int",
+    "user.delete": "<user_id>int [force]bool",
+    "user.list": "[page=1]int [size=20]int"
+}
+```
+
+#### Regex Validation (Note double escaping)
+```json
+{
+    "user.add": "<username(^[a-zA-Z][a-zA-Z0-9_]{3,15}$)> [email(^[\\w\\.-]+@[\\w\\.-]+\\.[\\w]+$)]",
+    "user.date": "<date(^\\d{4}-\\d{2}-\\d{2}$)>",
+    "user.phone": "<phone(^1[3-9]\\d{9}$)>"
+}
+```
+
+#### Array Parameters
+```json
+{
+    "user.batch": "<ids:3>int",
+    "user.search": "<keyword> [tags:0]",
+    "user.multi": "<values:0>float"
+}
+```
+
+#### Complex Types
+```json
+{
+    "data.import": "<config>json",
+    "user.add": "<name> [roles:0]json [age=0]int"
+}
+```
