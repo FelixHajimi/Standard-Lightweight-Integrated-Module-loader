@@ -55,8 +55,8 @@ Create `setting.json` in your project directory and enter the following content
 ```json
 {
   "language": "en-us",
-  "commandConfig": "command.json",
-  "commandDir": "command",
+  "command_config": "command.json",
+  "command_dir": "command",
   "debug": false
 }
 ```
