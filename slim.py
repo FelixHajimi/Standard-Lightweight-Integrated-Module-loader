@@ -23,7 +23,7 @@ def config_parser(config: str):
             if not match1.group(1):
                 logging.error(tran.run("fill_name", f"<?>{arg}"))
                 print(
-                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('fill_name', f'<?>{arg}')}\033[0m"
+                    f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m"
                 )
             res.append(
                 {
@@ -38,7 +38,7 @@ def config_parser(config: str):
             if not match2.group(1):
                 logging.error(tran.run("fill_name", f"<?>{arg}"))
                 print(
-                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('fill_name', f'<?>{arg}')}\033[0m"
+                    f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m"
                 )
             res.append(
                 {
@@ -53,7 +53,7 @@ def config_parser(config: str):
         else:
             logging.error(tran.run("not_match_format", f"<?>{arg}"))
             print(
-                f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('not_match_format', f'<?>{arg}')}\033[0m"
+                f"\x1b[41;37m{tran.run('not_match_format', f'<?>{arg}')}\x1b[0m"
             )
     return res
 
@@ -167,7 +167,7 @@ def run_func(enter, config: str, arg_start_index: int):
             except Exception:
                 logging.error(eval(tran.run("required_error")))
                 print(
-                    f"\033[48;2;255;0;0;38;2;255;255;255m{eval(tran.run('required_error'))}\033[0m"
+                    f"\x1b[41;37m{eval(tran.run('required_error'))}\x1b[0m"
                 )
                 return
         enter(**data)
@@ -188,7 +188,7 @@ class AdminCommands:
             except KeyError:
                 logging.error(f"{tran.run('not_found_command')}{id}")
                 print(
-                    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('not_found_command')}{id}\033[0m"
+                    f"\x1b[41;37m{tran.run('not_found_command')}{id}\x1b[0m"
                 )
 
     def create(self, id: str | None, config: str | None):
@@ -245,7 +245,7 @@ def run_admin_func(admin_args: list[str]):
             return
     logging.error(tran.run("not_found_command", f"<?>{args}"))
     print(
-        f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('not_found_command', f'<?>{args}')}\033[0m"
+        f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m"
     )
 
 
@@ -348,7 +348,7 @@ for id, config in command_config.items():
         except Exception:
             logging.warning(tran.run("not_found_commandFile"))
             print(
-                f"\033[48;2;255;255;0;38;2;255;255;255m{tran.run('not_found_commandFile')}\033[0m"
+                f"\x1b[43;37m{tran.run('not_found_commandFile')}\x1b[0m"
             )
             quit()
         if hasattr(func, "config"):
@@ -358,5 +358,5 @@ for id, config in command_config.items():
         quit()
 logging.error(tran.run("not_found_command", f"<?>{args}"))
 print(
-    f"\033[48;2;255;0;0;38;2;255;255;255m{tran.run('not_found_command', f'<?>{args}')}\033[0m"
+    f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m"
 )
