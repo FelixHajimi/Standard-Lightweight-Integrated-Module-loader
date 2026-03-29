@@ -22,9 +22,7 @@ def config_parser(config: str):
         if match1:
             if not match1.group(1):
                 logging.error(tran.run("fill_name", f"<?>{arg}"))
-                print(
-                    f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m"
-                )
+                print(f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m")
             res.append(
                 {
                     "class": 1,
@@ -37,9 +35,7 @@ def config_parser(config: str):
         elif match2:
             if not match2.group(1):
                 logging.error(tran.run("fill_name", f"<?>{arg}"))
-                print(
-                    f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m"
-                )
+                print(f"\x1b[41;37m{tran.run('fill_name', f'<?>{arg}')}\x1b[0m")
             res.append(
                 {
                     "class": 2,
@@ -52,9 +48,7 @@ def config_parser(config: str):
             )
         else:
             logging.error(tran.run("not_match_format", f"<?>{arg}"))
-            print(
-                f"\x1b[41;37m{tran.run('not_match_format', f'<?>{arg}')}\x1b[0m"
-            )
+            print(f"\x1b[41;37m{tran.run('not_match_format', f'<?>{arg}')}\x1b[0m")
     return res
 
 
@@ -166,9 +160,7 @@ def run_func(enter, config: str, arg_start_index: int):
                     print(f"{tran.run('not_found_format')}{arg['class']}")
             except Exception:
                 logging.error(eval(tran.run("required_error")))
-                print(
-                    f"\x1b[41;37m{eval(tran.run('required_error'))}\x1b[0m"
-                )
+                print(f"\x1b[41;37m{eval(tran.run('required_error'))}\x1b[0m")
                 return
         enter(**data)
 
@@ -187,9 +179,7 @@ class AdminCommands:
                 print(f"{id} : {commands[id]}")
             except KeyError:
                 logging.error(f"{tran.run('not_found_command')}{id}")
-                print(
-                    f"\x1b[41;37m{tran.run('not_found_command')}{id}\x1b[0m"
-                )
+                print(f"\x1b[41;37m{tran.run('not_found_command')}{id}\x1b[0m")
 
     def create(self, id: str | None, config: str | None):
         command_config = json.load(
@@ -244,9 +234,7 @@ def run_admin_func(admin_args: list[str]):
             run_func(config[1], config[0], len(command.split(".")))
             return
     logging.error(tran.run("not_found_command", f"<?>{args}"))
-    print(
-        f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m"
-    )
+    print(f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m")
 
 
 class Tran:
@@ -281,7 +269,7 @@ TRAN = {
         "created_file": "已创建文件至: ",
         "fill_name": "请填写参数名: ",
         "not_match_format": "没有匹配此格式的参数: ",
-        "not_found_commandFile": "检测到命令文件不存在,程序已退出",
+        "run_command_error": "命令不存在或命令运行错误,程序已退出",
         "running_command": "正在运行命令",
         "running_admin_command": "正在运行管理员命令",
         "not_found_format": "没有此格式: ",
@@ -293,7 +281,7 @@ TRAN = {
         "created_file": "File created at: ",
         "fill_name": "Please fill in parameter name: ",
         "not_match_format": "No parameter matching this format: ",
-        "not_found_commandFile": "Command file not detected, the program has exited",
+        "run_command_error": "The command does not exist or the command execution failed, the program has exited",
         "running_command": "Running command",
         "running_admin_command": "Running admin command",
         "not_found_format": "This format does not exist: ",
@@ -321,42 +309,38 @@ if len(args) != 0 and args[0] == "--admin":
     quit()
 
 
-config_args = {
-    "path": PATH,
-    "lang": SETTING["language"],
-    "debug": SETTING["debug"],
-    "other": SETTING["other"],
-    "tools": {
-        "Tran": Tran,
-        "config_parser": config_parser,
-        "run_func": run_func,
-        "to_type": to_type,
-        "AdminCommands": AdminCommands,
-        "run_admin_func": run_admin_func,
-    },
-}
-
-
 for id, config in command_config.items():
     if id == ".".join(args[: len(id.split("."))]):
+        if "command" in SETTING and id in SETTING["command"]:
+            for key in SETTING["command"][id].keys():
+                SETTING[key] = SETTING["command"][id][key]
+        config_args = {
+            "path": PATH,
+            "lang": SETTING["language"],
+            "debug": SETTING["debug"],
+            "other": SETTING["other"],
+            "tools": {
+                "Tran": Tran,
+                "config_parser": config_parser,
+                "run_func": run_func,
+                "to_type": to_type,
+                "AdminCommands": AdminCommands,
+                "run_admin_func": run_admin_func,
+            },
+        }
         try:
             spec = pathImport.spec_from_file_location("func", commands[id])
             if not spec or not spec.loader:
                 raise
             func = pathImport.module_from_spec(spec)
             spec.loader.exec_module(func)
+            if hasattr(func, "config"):
+                getattr(func, "config")(**config_args)
+            logging.info(tran.run("running_command", f"<?>:{args}"))
+            run_func(func.enter, config, len(args[: len(id.split("."))]) - 1)
         except Exception:
-            logging.warning(tran.run("not_found_commandFile"))
-            print(
-                f"\x1b[43;37m{tran.run('not_found_commandFile')}\x1b[0m"
-            )
-            quit()
-        if hasattr(func, "config"):
-            getattr(func, "config")(**config_args)
-        logging.info(tran.run("running_command", f"<?>:{args}"))
-        run_func(func.enter, config, len(args[: len(id.split("."))]) - 1)
+            logging.warning(tran.run("run_command_error"))
+            print(f"\x1b[43;37m{tran.run('run_command_error')}\x1b[0m")
         quit()
 logging.error(tran.run("not_found_command", f"<?>{args}"))
-print(
-    f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m"
-)
+print(f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m")

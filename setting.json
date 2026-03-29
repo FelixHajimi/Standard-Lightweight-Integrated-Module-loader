@@ -1,7 +1,7 @@
 {
-    "language": "en-us",
-    "command_config": "command.json",
-    "command_dir": "command",
-    "debug": false,
-    "other": {}
+  "language": "en-us",
+  "command_config": "command.json",
+  "command_dir": "command",
+  "debug": false,
+  "other": {}
 }
