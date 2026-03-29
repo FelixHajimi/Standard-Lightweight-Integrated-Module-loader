@@ -1,8 +1,6 @@
-import importlib.util as pathImport
 import json
 import logging
 import os
-import pathlib
 import re
 import sys
 
@@ -54,31 +52,25 @@ def config_parser(config: str):
     return res
 
 
-def to_type(text: str | bool | None, type_: str | None):
+def to_type(text: str | None, type_: str | None):
     if text is None or type_ is None:
         return None
     mapping = {
-        "string": (str, "str"),
-        "int": (int, "int"),
-        "float": (float, "float"),
-        "bool": (bool, "bool"),
-        "json": (json.loads, "object"),
+        "string": str,
+        "int": int,
+        "float": float,
+        "bool": bool,
+        "json": json.loads,
     }
-    if isinstance(text, str):
-        for t, f in mapping.items():
-            if type_ == t:
-                if type_ == "json":
-                    text = text.replace("'", '"')
-                try:
-                    return f[0](text)
-                except Exception as error:
-                    logging.error(f"{tran.run('conversion_error')}{error}")
-                    return None
-    elif isinstance(text, bool) and text:
-        if type_ in mapping:
-            return mapping[type_][1]
-        else:
-            return ""
+    for t, f in mapping.items():
+        if type_ == t:
+            if type_ == "json":
+                text = text.replace("'", '"')
+            try:
+                return f(text)
+            except Exception as error:
+                logging.error(f"{tran.run('conversion_error')}{error}")
+                return None
 
 
 def run_func(enter, config: str, arg_start_index: int):
@@ -177,54 +169,6 @@ class AdminCommands:
     def __init__(self, debug: bool = False):
         self.debug = debug
 
-    def help(self, id: str | None):
-        commands = json.load(open(f"{PATH}/command.json", encoding="utf-8"))
-        if id is None:
-            for id, config in commands.items():
-                print(f"{id} : {config}")
-        else:
-            try:
-                print(f"{id} : {commands[id]}")
-            except KeyError:
-                logging.error(f"{tran.run('not_found_command')}{id}")
-                print(f"\x1b[41;37m{tran.run('not_found_command')}{id}\x1b[0m")
-
-    def create(self, id: str | None, config: str | None):
-        command_config = json.load(
-            open(f"{PATH}/{SETTING['command_config']}", encoding="utf-8")
-        )
-        if id is None and config is None:
-            for id, config in command_config.items():
-                if id is None or config is None:
-                    return
-                path = f"{PATH}/{SETTING['command_dir']}/{'/'.join(id.split('.'))}.py"
-                p = pathlib.Path(path)
-                if not p.exists():
-                    p.touch()
-                    args_text = ""
-                    for arg in config_parser(config):
-                        args_text = (
-                            f"{args_text}, {arg['name']}: {f'list[{to_type(True, arg["type"])}]' if arg['length'] else f'{to_type(True, arg["type"])}'}"
-                            if arg["class"] == 1
-                            else (
-                                f"{args_text}, {arg['name']}: {f'list[{to_type(True, arg["type"])} | None]' if arg['length'] else f'{to_type(True, arg["type"])} | None'}"
-                                if arg["class"] == 2
-                                else f"{args_text}, ERROR"
-                            )
-                        )
-                    open(path, "w", encoding="utf-8").write(
-                        f"def config(**args):\n    pass\n\ndef enter({args_text[2:]}):\n    pass"
-                    )
-                    logging.info(tran.run("created_file", f"<?>{path}"))
-                    print(tran.run("created_file", f"<?>{path}"))
-        else:
-            command_config[id] = "-" if config is None else config
-            open(SETTING["command_config"], "w", encoding="utf-8").write(
-                json.dumps(command_config, indent=2, ensure_ascii=False)
-            )
-            print(tran.run("created_file", f"<?>{SETTING['command_config']}"))
-            self.create(None, None)
-
     def setting(self, path: str | None, value: object | None):
         SETTING = json.load(open(f"{PATH}/setting.json", encoding="utf-8"))
         if path is None:
@@ -246,8 +190,6 @@ class AdminCommands:
 def run_admin_func(admin_args: list[str]):
     admin = AdminCommands(SETTING["debug"])
     admin_commands = {
-        "help": ("[id]", admin.help),
-        "create": ("[id] [config]", admin.create),
         "setting": ("[path] [value]json", admin.setting),
     }
     admin_commands = {
@@ -279,14 +221,54 @@ class Tran:
         return content.replace("<?>", self.map[language][key])
 
 
+def run():
+    global command_enter
+    command_enter = {
+        key: command_enter[key]
+        for key in sorted(command_enter, key=lambda id: len(id), reverse=True)
+    }
+    if len(args) != 0 and args[0] == "--admin":
+        run_admin_func(args[1:])
+        quit()
+
+    for id, (command, config) in command_enter.items():
+        if id == ".".join(args[: len(id.split("."))]):
+            if "command" in SETTING and id in SETTING["command"]:
+                for key in SETTING["command"][id].keys():
+                    SETTING[key] = SETTING["command"][id][key]
+            config_args = {
+                "path": PATH,
+                "lang": SETTING["language"],
+                "debug": SETTING["debug"],
+                "other": SETTING["other"],
+                "tools": {
+                    "Tran": Tran,
+                    "config_parser": config_parser,
+                    "run_func": run_func,
+                    "to_type": to_type,
+                    "AdminCommands": AdminCommands,
+                    "run_admin_func": run_admin_func,
+                },
+            }
+            try:
+                if hasattr(command, "config"):
+                    getattr(command, "config")(**config_args)
+                logging.info(tran.run("running_command", f"<?>:{args}"))
+                run_func(command.enter, config, len(args[: len(id.split("."))]) - 1)
+            except Exception:
+                logging.warning(tran.run("run_command_error"))
+                print(f"\x1b[43;37m{tran.run('run_command_error')}\x1b[0m")
+            quit()
+    logging.error(tran.run("not_found_command", f"<?>{args}"))
+    print(f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m")
+
+
 logging.basicConfig(
     filename="./last.log",
     format="[%(levelname)s](%(asctime)s)<%(pathname)s>\n%(message)s",
     level=logging.DEBUG,
     encoding="utf-8",
 )
-
-
 PATH = os.path.dirname(os.path.abspath(__file__))
 TRAN = {
     "zh-cn": {
@@ -315,58 +297,11 @@ TRAN = {
     },
 }
 SETTING = json.load(open(f"{PATH}/setting.json", encoding="utf-8"))
-
-
-command_config: dict = json.load(
-    open(f"{PATH}/{SETTING['command_config']}", encoding="utf-8")
-)
-command_config = {
-    key: command_config[key]
-    for key in sorted(command_config, key=lambda id: len(id), reverse=True)
-}
-commands = {
-    key: f"{PATH}/{SETTING['command_dir']}/{'/'.join(key.split('.'))}.py"
-    for key in command_config
-}
 tran = Tran(TRAN, SETTING["language"])
 args = sys.argv[1:]
-if len(args) != 0 and args[0] == "--admin":
-    run_admin_func(args[1:])
-    quit()
+command_enter = {}
 
 
-for id, config in command_config.items():
-    if id == ".".join(args[: len(id.split("."))]):
-        if "command" in SETTING and id in SETTING["command"]:
-            for key in SETTING["command"][id].keys():
-                SETTING[key] = SETTING["command"][id][key]
-        config_args = {
-            "path": PATH,
-            "lang": SETTING["language"],
-            "debug": SETTING["debug"],
-            "other": SETTING["other"],
-            "tools": {
-                "Tran": Tran,
-                "config_parser": config_parser,
-                "run_func": run_func,
-                "to_type": to_type,
-                "AdminCommands": AdminCommands,
-                "run_admin_func": run_admin_func,
-            },
-        }
-        try:
-            spec = pathImport.spec_from_file_location("func", commands[id])
-            if not spec or not spec.loader:
-                raise
-            func = pathImport.module_from_spec(spec)
-            spec.loader.exec_module(func)
-            if hasattr(func, "config"):
-                getattr(func, "config")(**config_args)
-            logging.info(tran.run("running_command", f"<?>:{args}"))
-            run_func(func.enter, config, len(args[: len(id.split("."))]) - 1)
-        except Exception:
-            logging.warning(tran.run("run_command_error"))
-            print(f"\x1b[43;37m{tran.run('run_command_error')}\x1b[0m")
-        quit()
-logging.error(tran.run("not_found_command", f"<?>{args}"))
-print(f"\x1b[41;37m{tran.run('not_found_command', f'<?>{args}')}\x1b[0m")
+def register(command_id: str, config: str, command):
+    global command_enter
+    command_enter[command_id] = (command, config)
