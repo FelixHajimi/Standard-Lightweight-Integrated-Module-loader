@@ -279,15 +279,13 @@ class Tran:
         return content.replace("<?>", self.map[language][key])
 
 
+PATH = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(
-    filename="./last.log",
+    filename=f"{PATH}/last.log",
     format="[%(levelname)s](%(asctime)s)<%(pathname)s>\n%(message)s",
     level=logging.DEBUG,
     encoding="utf-8",
 )
-
-
-PATH = os.path.dirname(os.path.abspath(__file__))
 TRAN = {
     "zh-cn": {
         "required_error": 'f"你有一个必填项未填写: 应该在第 {index} 个参数填写,参数名为 {arg["name"]}"',
@@ -317,16 +315,16 @@ TRAN = {
 SETTING = json.load(open(f"{PATH}/setting.json", encoding="utf-8"))
 
 
-command_config: dict = json.load(
+command_enter: dict = json.load(
     open(f"{PATH}/{SETTING['command_config']}", encoding="utf-8")
 )
-command_config = {
-    key: command_config[key]
-    for key in sorted(command_config, key=lambda id: len(id), reverse=True)
+command_enter = {
+    key: command_enter[key]
+    for key in sorted(command_enter, key=lambda id: len(id), reverse=True)
 }
 commands = {
     key: f"{PATH}/{SETTING['command_dir']}/{'/'.join(key.split('.'))}.py"
-    for key in command_config
+    for key in command_enter
 }
 tran = Tran(TRAN, SETTING["language"])
 args = sys.argv[1:]
@@ -335,7 +333,7 @@ if len(args) != 0 and args[0] == "--admin":
     quit()
 
 
-for id, config in command_config.items():
+for id, config in command_enter.items():
     if id == ".".join(args[: len(id.split("."))]):
         if "command" in SETTING and id in SETTING["command"]:
             for key in SETTING["command"][id].keys():
